@@ -6,7 +6,7 @@ using recipe_core_dotnet.common.Services.users;
 namespace recipe_core_dotnet.apiV1.Controllers;
 
 [ApiController]
-[Route("v1/users")]
+[Route("api/v1/users")]
 public class UserController : ControllerBase
 {
     private readonly ILogger<UserController> _logger;

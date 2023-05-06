@@ -6,7 +6,7 @@ using recipe_core_dotnet.common.Services.auth;
 namespace recipe_core_dotnet.apiV1.Controllers;
 
 [ApiController]
-[Route("v1/auth")]
+[Route("api/v1/auth")]
 public class AuthController : ControllerBase
 {
     private readonly ILogger<AuthController> _logger;

@@ -5,7 +5,7 @@ using recipe_core_dotnet.common.Models;
 namespace recipe_core_dotnet.apiV1.Controllers;
 
 [ApiController]
-[Route("v1/weathers")]
+[Route("api/v1/weathers")]
 public class WeatherForecastController : ControllerBase
 {
     private static readonly string[] Summaries = new[]
