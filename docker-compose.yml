@@ -1,0 +1,36 @@
+﻿services:
+  recipe-core-dotnet:
+    image: recipe-core-dotnet
+    ports:
+      - 3001:80
+#      - 3002:443
+    build:
+      context: ./recipe-core-dotnet
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - app
+
+  postgres:
+    image: postgres:15-alpine
+    # restart: always
+    logging:
+      options:
+        max-size: 50m
+        max-file: "5"
+    ports:
+      - 5440:5432
+    volumes:
+      - ./db/database-data:/var/lib/postgresql/data/:rw
+      - ./:/docker-entrypoint-initdb.d/
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: recipe_database
+    networks:
+      - app
+
+networks:
+  app:
+    driver: bridge
