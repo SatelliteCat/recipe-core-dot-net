@@ -32,15 +32,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             throw new Exception("Not found password hash salt.");
         }
 
-        options.RequireHttpsMetadata = true; // set to true in production
+        string? issuer = builder.Configuration.GetValue<string>("JwtTokenIssuer");
+
+        if (string.IsNullOrEmpty(issuer))
+        {
+            throw new Exception("Not found JWT issuer.");
+        }
+
+        options.RequireHttpsMetadata = true;
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
+            ValidateIssuer = true,
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = "issuer",
+            ValidIssuer = issuer,
             ValidAudience = "audience",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(passwordHashSalt!))
         };
@@ -57,7 +64,7 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 app.UseAuthorization();
-app.UseAuthentication();
+// app.UseAuthentication();
 
 app.MapControllers();
 

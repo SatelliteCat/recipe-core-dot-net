@@ -22,9 +22,7 @@ public class AuthService : IAuthService
     {
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-        byte[] passwordSalt = Encoding.UTF8.GetBytes(GetPasswordHashSalt());
-
-        return user != null && VerifyPassword(password, user.Password, passwordSalt);
+        return user != null && VerifyPassword(password, user.Password);
     }
 
     public string HashPassword(string password)
@@ -32,7 +30,6 @@ public class AuthService : IAuthService
         var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(GetPasswordHashSalt()));
 
         var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-
         var hash = BitConverter.ToString(computedHash).Replace("-", "").ToLower();
 
         return hash;
@@ -41,18 +38,20 @@ public class AuthService : IAuthService
     public string CreateToken(string email)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(GetPasswordHashSalt());
-        var tokenDescriptor = new SecurityTokenDescriptor
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetPasswordHashSalt()));
+        var claims = new List<Claim>
         {
-            Subject = new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.Email, email) }),
-            Expires = DateTime.UtcNow.AddDays(7),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature)
+            new(ClaimTypes.Email, email)
         };
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var tokenDescriptor = new JwtSecurityToken(
+            issuer: GetJwtIssuer(),
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(7),
+            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature)
+        );
 
-        return tokenHandler.WriteToken(token);
+        return tokenHandler.WriteToken(tokenDescriptor);
     }
 
     public string GetPasswordHashSalt()
@@ -67,14 +66,23 @@ public class AuthService : IAuthService
         return passwordHashSalt!;
     }
 
-    private static bool VerifyPassword(string password, string passwordHash, byte[] passwordSalt)
+    public string GetJwtIssuer()
     {
-        using var hmac = new HMACSHA512(passwordSalt);
+        string? issuer = _configuration.GetValue<string>("JwtTokenIssuer");
 
-        var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        var computedHashString = BitConverter.ToString(computedHash).Replace("-", "").ToLower();
+        if (string.IsNullOrEmpty(issuer))
+        {
+            throw new Exception("Not found JWT issuer.");
+        }
 
-        return passwordHash == computedHashString;
-        return !computedHash.Where((t, i) => t != passwordHash[i]).Any();
+        return issuer!;
+    }
+
+    private bool VerifyPassword(string password, string passwordHash)
+    {
+        Console.WriteLine(passwordHash);
+        Console.WriteLine(HashPassword(password));
+        
+        return passwordHash == HashPassword(password);
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using recipe_core_dotnet.ApiV1.Dto;
 using recipe_core_dotnet.common.Models;
@@ -19,22 +20,13 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
-    // [Authorize]
+    [Authorize]
     public async Task<IActionResult> GetAll()
     {
-        // _logger.LogInformation("hello");
-        // _logger.LogInformation( "IsAuthenticated [{}]", User.Identity?.IsAuthenticated ?? false);
-        // _logger.LogInformation( "Identity Name [{}]", User.Identity?.Name ?? "");
-
-        if (!(User.Identity?.IsAuthenticated ?? false))
-        {
-            return Unauthorized();
-        }
-
         return Ok(await _userService.GetAllUsersAsync());
     }
 
-    [HttpPost]
+    [HttpPost, AllowAnonymous]
     public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
     {
         User? user = null;

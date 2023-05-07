@@ -6,4 +6,5 @@ public interface IAuthService
     string HashPassword(string password);
     string CreateToken(string email);
     string GetPasswordHashSalt();
+    string GetJwtIssuer();
 }
