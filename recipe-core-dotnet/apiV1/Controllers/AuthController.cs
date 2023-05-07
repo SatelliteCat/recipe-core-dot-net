@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using recipe_core_dotnet.ApiV1.Dto;
 using recipe_core_dotnet.common.Services.auth;
 
@@ -20,6 +21,7 @@ public class AuthController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("login")]
+    [EnableRateLimiting("TokenBucketPolicy")]
     public async Task<IActionResult> Login([FromBody] AuthLoginDto dto)
     {
         if (!await _authService.IsValidUserAsync(dto.Email, dto.Password))

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using recipe_core_dotnet.ApiV1.Dto;
 using recipe_core_dotnet.common.Models;
 using recipe_core_dotnet.common.Services.users;
@@ -21,12 +22,14 @@ public class UserController : ControllerBase
 
     [HttpGet]
     [Authorize]
+    [EnableRateLimiting("TokenBucketPolicy")]
     public async Task<IActionResult> GetAll()
     {
         return Ok(await _userService.GetAllUsersAsync());
     }
 
     [HttpPost, AllowAnonymous]
+    [EnableRateLimiting("TokenBucketPolicy")]
     public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
     {
         User? user = null;

@@ -1,5 +1,7 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using recipe_core_dotnet.common;
@@ -60,6 +62,19 @@ builder.Services
         };
     });
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddTokenBucketLimiter("TokenBucketPolicy", limiterOptions =>
+    {
+        limiterOptions.TokenLimit = 4;
+        limiterOptions.TokensPerPeriod = 4;
+        limiterOptions.QueueLimit = 2;
+        limiterOptions.AutoReplenishment = true;
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.ReplenishmentPeriod = TimeSpan.FromSeconds(30);
+    }).RejectionStatusCode = 429;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -68,6 +83,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseRateLimiter();
 
 // app.UseHttpsRedirection();
 app.UseAuthorization();
