@@ -9,10 +9,10 @@ namespace recipe_core_dotnet.common.Services.auth;
 
 public class AuthService : IAuthService
 {
-    private readonly RecipeDbContext _dbContext;
+    private readonly AppDbContext _dbContext;
     private readonly IConfiguration _configuration;
 
-    public AuthService(RecipeDbContext dbContext, IConfiguration configuration)
+    public AuthService(AppDbContext dbContext, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _configuration = configuration;

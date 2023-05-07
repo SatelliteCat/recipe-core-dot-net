@@ -7,10 +7,10 @@ namespace recipe_core_dotnet.common.Services.users;
 public class UserService
 {
     private readonly ILogger<UserService> _logger;
-    private readonly RecipeDbContext _context;
+    private readonly AppDbContext _context;
     private readonly IAuthService _authService;
 
-    public UserService(ILogger<UserService> logger, RecipeDbContext context, IAuthService authService)
+    public UserService(ILogger<UserService> logger, AppDbContext context, IAuthService authService)
     {
         _logger = logger;
         _context = context;
