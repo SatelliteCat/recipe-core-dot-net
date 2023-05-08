@@ -1,10 +1,12 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using recipe_core_dotnet.common;
+using recipe_core_dotnet.common.Models;
 using recipe_core_dotnet.common.Services.auth;
 using recipe_core_dotnet.common.Services.users;
 
@@ -19,10 +21,23 @@ builder.Services.AddControllers();
 
 builder.Services.AddTransient<UserService>();
 builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddScoped<RoleManager<Role>>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services
+    .AddIdentity<User, Role>(options =>
+    {
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 4;
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services
     .AddAuthentication(options =>
@@ -87,8 +102,8 @@ if (app.Environment.IsDevelopment())
 app.UseRateLimiter();
 
 // app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
-// app.UseAuthentication();
 
 app.MapControllers();
 

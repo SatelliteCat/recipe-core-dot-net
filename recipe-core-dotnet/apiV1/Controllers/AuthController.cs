@@ -26,10 +26,11 @@ public class AuthController : ControllerBase
     {
         if (!await _authService.IsValidUserAsync(dto.Email, dto.Password))
         {
-            // return Unauthorized();
             return BadRequest(new { message = "Invalid email or password" });
         }
 
-        return Ok(new { token = _authService.CreateToken(dto.Email) });
+        var user = await _authService.GetUserByEmailAsync(dto.Email);
+
+        return Ok(new { token = await _authService.CreateToken(user!) });
     }
 }

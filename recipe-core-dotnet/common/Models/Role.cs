@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Identity;
 
 namespace recipe_core_dotnet.common.Models;
 
-[Table("user")]
-public class User : IdentityUser<int>
+[Table("role")]
+public class Role : IdentityRole<int>
 {
-    [Column("uuid")] public string Uuid { get; set; } = null!;
+    [Column("description")] public string? Description { get; set; } = null;
 }

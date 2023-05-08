@@ -2,8 +2,10 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using recipe_core_dotnet.common.Models;
 
 namespace recipe_core_dotnet.common.Services.auth;
 
@@ -11,18 +13,25 @@ public class AuthService : IAuthService
 {
     private readonly AppDbContext _dbContext;
     private readonly IConfiguration _configuration;
+    private readonly UserManager<User> _userManager;
 
-    public AuthService(AppDbContext dbContext, IConfiguration configuration)
+    public AuthService(AppDbContext dbContext, IConfiguration configuration, UserManager<User> userManager)
     {
         _dbContext = dbContext;
         _configuration = configuration;
+        _userManager = userManager;
     }
 
     public async Task<bool> IsValidUserAsync(string email, string password)
     {
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await GetUserByEmailAsync(email);
 
-        return user != null && VerifyPassword(password, user.Password);
+        return user != null && VerifyPassword(password, user.PasswordHash!);
+    }
+
+    public Task<User?> GetUserByEmailAsync(string email)
+    {
+        return _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public string HashPassword(string password)
@@ -35,18 +44,22 @@ public class AuthService : IAuthService
         return hash;
     }
 
-    public string CreateToken(string email)
+    public async Task<string> CreateToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetPasswordHashSalt()));
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var roleClaims = roles.Select(r => new Claim(ClaimTypes.Role, r));
+        
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Email, email)
+            new(ClaimTypes.Email, user.Email!),
         };
 
         var tokenDescriptor = new JwtSecurityToken(
             issuer: GetJwtIssuer(),
-            claims: claims,
+            claims: claims.Concat(roleClaims),
             expires: DateTime.UtcNow.AddDays(7),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature)
         );

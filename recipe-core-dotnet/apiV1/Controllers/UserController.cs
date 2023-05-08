@@ -21,7 +21,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
+    [Authorize(Roles = "admin")]
     [EnableRateLimiting("TokenBucketPolicy")]
     public async Task<IActionResult> GetAll()
     {
@@ -32,33 +32,31 @@ public class UserController : ControllerBase
     [EnableRateLimiting("TokenBucketPolicy")]
     public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
     {
-        User? user = null;
+        User? user = new User()
+        {
+            Email = dto.Email,
+            PasswordHash = dto.Password,
+            Uuid = Guid.NewGuid().ToString()
+        };
 
         try
         {
-            user = await _userService.RegisterUserAsync(new User()
-            {
-                Email = dto.Email,
-                Password = dto.Password,
-                Uuid = Guid.NewGuid().ToString()
-            });
+            user = await _userService.RegisterUserAsync(user, dto.Role);
+        }
+        catch (UserServiceException e)
+        {
+            return BadRequest(new { message = e.Message });
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Error: {e.Message}");
+            Console.WriteLine($"Error in user register: {e.Message}");
 
-            return UnprocessableEntity(new
-            {
-                message = "Failed to create user"
-            });
+            return BadRequest(new { message = "Failed to create user." });
         }
 
         if (user == null)
         {
-            return BadRequest(new
-            {
-                message = "Email exists"
-            });
+            return BadRequest(new { message = "Failed to create user." });
         }
 
         return Ok(user);
